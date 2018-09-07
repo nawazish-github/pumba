@@ -1,6 +1,8 @@
 version: 0.2
 
 env:
+  variables:
+    REPO_NAME: pumba
   parameter-store:
     GITHUB_TOKEN: PRIVATE_GITHUB_TOKEN
     CODECOV_TOKEN: PUMBA_CODECOV_TOKEN
@@ -8,7 +10,9 @@ env:
 phases:
   install:
     commands:
-      - sudo apt-get update -y && sudo apt-get install -y git
+      - echo Starting Docker daemon...
+      - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay&
+      - timeout -t 15 sh -c "until docker info; do echo .; sleep 1; done"
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
@@ -17,7 +21,7 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Pumba Docker image...
-      - hack/codefresh_build.sh
+      - ./hack/codebuild_build.sh
   post_build:
     commands:
       - echo Build completed on `date`
